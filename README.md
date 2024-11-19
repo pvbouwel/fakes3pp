@@ -3,6 +3,7 @@
 The goal of fake S3 plus plus is to enrich S3 compatible API's to close the gap with
 (Amazon's S3 service)[https://aws.amazon.com/pm/serv-s3] which is feature rich compared to alternate implementations.
 
+
 ## Scope
 
 ### Goals
