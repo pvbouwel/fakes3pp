@@ -34,6 +34,7 @@ jobs:
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
       - name: Push image
+        if: github.repository_owner != 'VITObelgium'
         run: |
           IMAGE_ID=ghcr.io/${{ github.repository_owner }}/$LOCALVIP_IMAGE_NAME
 
