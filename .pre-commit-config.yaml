@@ -35,7 +35,8 @@ repos:
     #
     -   id: go-sec-mod  #TODO
         args: [
-          "-exclude=G101"  # We already detect secrets
+          "-exclude=G101",  # We already detect secrets
+          "-exclude-dir=localvip"  # https://github.com/securego/gosec/issues/622
         ]
     #
     # StaticCheck
