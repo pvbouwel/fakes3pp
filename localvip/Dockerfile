@@ -15,7 +15,9 @@ ADD . /usr/src/localvip/
 RUN CGO_ENABLED=0 GOOS=linux go build -o main .
 
 # If tests pass then build the final stage
-FROM scratch
+# To have iptables and the shared libraries available do not start from scratch
+FROM alpine:3.19
+RUN apk add --no-cache iptables
 
 # We need our binary
 COPY --from=base /usr/src/localvip/main /localvip

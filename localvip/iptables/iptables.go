@@ -3,14 +3,14 @@ package iptables
 import (
 	"errors"
 
-	"github.com/coreos/go-iptables/iptables"
+	ipt "github.com/coreos/go-iptables/iptables"
 )
 
-var ipTables *iptables.IPTables
+var ipTables *ipt.IPTables
 
-func GetIpTables() (*iptables.IPTables, error) {
+func GetIpTables() (*ipt.IPTables, error) {
 	if ipTables == nil {
-		ipt, err := iptables.New()
+		ipt, err := ipt.New()
 		if err != nil {
 			return nil, err
 		}

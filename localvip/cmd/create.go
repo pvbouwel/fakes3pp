@@ -3,15 +3,23 @@ package cmd
 import (
 	"log/slog"
 	"os"
+	"slices"
 	"strings"
 
-	"github.com/VITObelgium/fakes3pp/localvip/iptables"
+	iptables "github.com/VITObelgium/fakes3pp/localvip/iptables"
+	nftables "github.com/VITObelgium/fakes3pp/localvip/nftables"
 	"github.com/spf13/cobra"
 )
 
 const argVipAddress string = "vip-address"
 const argTargetAddress string = "target-address"
 const argPort string = "port"
+const argBackend string = "backend"
+
+const backendIptables string = "iptables"
+const backendNftables string = "nftables"
+
+var possibleBackends []string = []string{backendIptables, backendNftables}
 
 const exitCodeGenericFailure = 1
 const exitCodeMissingRequiredArgument = 2
@@ -36,6 +44,11 @@ You can specify multiple port pairs.`,
 		vipAddress := getStringArg(argVipAddress)
 		targetAddress := getStringArg(argTargetAddress)
 		ports := getStringSlicesArg(argPort)
+		backend := getStringArg(argBackend)
+		if !slices.Contains(possibleBackends, backend) {
+			slog.Error("Invalid backend provided", "provided", backend, "allowed", possibleBackends)
+			os.Exit(exitCodeInvalidArgument)
+		}
 
 		for _, port := range ports {
 			slog.Debug("Processing port config", "port", port)
@@ -55,7 +68,15 @@ You can specify multiple port pairs.`,
 				os.Exit(1)
 			}
 			slog.Debug("Trying to setup NAT", "vipAddress", vipAddress, "vipPort", vipPort, "target-address", targetAddress, "target-port", targetPort)
-			err := iptables.CreateVip(vipAddress, vipPort, targetAddress, targetPort)
+			var err error
+			switch backend {
+			case "iptables":
+				err = iptables.CreateVip(vipAddress, vipPort, targetAddress, targetPort)
+			case backendNftables:
+				err = nftables.CreateVip(vipAddress, vipPort, targetAddress, targetPort)
+
+			}
+
 			if err != nil {
 				slog.Error("Error encountered when trying to configure iptables", "error", err)
 				os.Exit(exitCodeGenericFailure)
@@ -106,6 +127,7 @@ func init() {
 
 	createCmd.Flags().String(argVipAddress, "169.254.83.51", "The vitual address that must be mapped to another address")
 	createCmd.Flags().String(argTargetAddress, "", "The address to be reached")
+	createCmd.Flags().String(argBackend, "iptables", "The backend used for implementing NAT rules {iptables|nftables}")
 	createCmd.Flags().StringSlice(argPort, []string{}, `The port to be reached.
 	This flag can be used multiple times if multiple ports must be reachable.
 	It is also allowed to specify a port pair separated by a colon.
