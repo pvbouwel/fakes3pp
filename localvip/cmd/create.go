@@ -21,6 +21,10 @@ const backendNftables string = "nftables"
 
 var possibleBackends []string = []string{backendIptables, backendNftables}
 
+const envTargetAddress string = "LOCALVIP_TARGET_ADDRESS"
+const envVipAddress string = "LOCALVIP_VIP_ADDRESS"
+const envLocalVipBackend string = "LOCALVIP_BACKEND"
+
 const exitCodeGenericFailure = 1
 const exitCodeMissingRequiredArgument = 2
 const exitCodeInvalidArgument = 3
@@ -35,16 +39,16 @@ You can specify multiple port pairs.`,
 	PreRun: setupLogging,
 	Run: func(cmd *cobra.Command, args []string) {
 		slog.Debug("create called")
-		getStringArg := func(name string) string {
-			return getStringArg(cmd, name)
+		getStringArg := func(name, env_var_fallback string) string {
+			return getStringArg(cmd, name, env_var_fallback)
 		}
 		getStringSlicesArg := func(name string) []string {
 			return getStringSlicesArg(cmd, name)
 		}
-		vipAddress := getStringArg(argVipAddress)
-		targetAddress := getStringArg(argTargetAddress)
+		vipAddress := getStringArg(argVipAddress, envVipAddress)
+		targetAddress := getStringArg(argTargetAddress, envTargetAddress)
 		ports := getStringSlicesArg(argPort)
-		backend := getStringArg(argBackend)
+		backend := getStringArg(argBackend, envLocalVipBackend)
 		if !slices.Contains(possibleBackends, backend) {
 			slog.Error("Invalid backend provided", "provided", backend, "allowed", possibleBackends)
 			os.Exit(exitCodeInvalidArgument)
@@ -86,16 +90,30 @@ You can specify multiple port pairs.`,
 	},
 }
 
-func getStringArg(cmd *cobra.Command, name string) string {
+// get a string Argument by name
+// If it is not present fallback to the corresponding env_far_fallback
+// or if that is not available then error out
+func getStringArg(cmd *cobra.Command, name, env_var_fallback string) string {
 	v, err := cmd.Flags().GetString(name)
 	if err != nil {
 		slog.Error("Issue getting argument", "argument-name", name, "error", err)
 		os.Exit(exitCodeInvalidArgument)
 	}
-	if v == "" {
+	if v != "" {
+		slog.Debug("Retrieved string argument", "name", name, "value", v, "source", "cli-argument")
+		return v
+	}
+	if env_var_fallback == "" {
 		slog.Error("Missing argument value", "argument-name", name)
 		os.Exit(exitCodeMissingRequiredArgument)
 	}
+
+	v = os.Getenv(env_var_fallback)
+	if v == "" {
+		slog.Error("Missing argument", "argument-name", name, "env-var-name", env_var_fallback)
+		os.Exit(exitCodeMissingRequiredArgument)
+	}
+	slog.Debug("Retrieved string argument", "name", name, "value", v, "source", "env", "env-var-name", env_var_fallback)
 	return v
 }
 
