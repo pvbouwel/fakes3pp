@@ -16,8 +16,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o main .
 
 # If tests pass then build the final stage
 # To have iptables and the shared libraries available do not start from scratch
-FROM alpine:3.19
-RUN apk add --no-cache iptables
+FROM registry.k8s.io/build-image/distroless-iptables:v0.8.7
 
 # We need our binary
 COPY --from=base /usr/src/localvip/main /localvip
