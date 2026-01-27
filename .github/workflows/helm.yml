@@ -79,4 +79,4 @@ jobs:
       - name: Push chart
         if: github.ref_type == 'tag' && startsWith(github.ref_name, 'chart-v')
         run: |
-          helm push fakes3pp-*.tgz oci://ghcr.io/${{ github.repository_owner }}/fakes3pp
+          helm push fakes3pp-*.tgz oci://ghcr.io/${{ github.repository_owner }}/charts
