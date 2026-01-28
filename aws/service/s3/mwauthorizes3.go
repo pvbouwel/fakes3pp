@@ -67,6 +67,7 @@ func authorizeS3Action(ctx context.Context, sessionToken, targetRegion string, a
 	}
 
 	policySessionData := iam.GetPolicySessionDataFromClaims(sessionClaims)
+	requestctx.AddAccessLogInfo(r, "auth", slog.Any("sessionData", policySessionData.Tags))
 	policySessionData.RequestedRegion = targetRegion
 	policyStr, err := policyRetriever.GetPolicy(sessionClaims.RoleARN, policySessionData)
 	if err != nil {
