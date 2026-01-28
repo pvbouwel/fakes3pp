@@ -168,8 +168,6 @@ func parseForm(r *http.Request) error {
 	return nil
 }
 
-type stsClaims map[string]interface{}
-
 // An assumeRoleWithWebIdentity is an API call that happens anonymously but where a token is send as part of the API
 // Call. That token will be exchanged for credentials.
 // Request parameters that we support:
@@ -179,10 +177,6 @@ type stsClaims map[string]interface{}
 // - WebIdentityToken following the structure
 func (s *STSServer) assumeRoleWithWebIdentity(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	requestctx.SetOperation(r, api.AssumeRoleWithWebIdentity)
-	claims := stsClaims{}
-	defer slog.InfoContext(ctx, "Auditlog", "claims", claims)
-	requestctx.AddAccessLogInfo(r, "sts", slog.Any("claims", claims))
-
 	token := r.Form.Get(stsWebIdentityToken)
 
 	claimsMap, err := credentials.ExtractOIDCTokenClaims(token, s.oidcVerifier.GetKeyFunc())
@@ -247,6 +241,15 @@ func (s *STSServer) assumeRoleWithWebIdentity(ctx context.Context, w http.Respon
 	newToken := s.newProxyIssuedToken(subject, issuer, roleArn, *duration, claimsMap.Tags)
 
 	cred, err := credentials.NewAWSCredentials(newToken, *duration, s.jwtKeyMaterial)
+
+	requestctx.AddAccessLogInfo(
+		r,
+		"sts",
+		slog.String("roleArn", roleArn),
+		slog.String("AKID", cred.AccessKey),
+		slog.String("subFromToken", subFromToken),
+		slog.Any("Tags", claimsMap.Tags),
+	)
 
 	if err != nil {
 		writeSTSErrorResponse(ctx, w, ErrSTSInternalError, err)
