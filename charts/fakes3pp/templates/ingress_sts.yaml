@@ -1,6 +1,6 @@
 {{- if .Values.sts.ingress.enabled -}}
 {{- $fullName := include "fakes3pp.fullnameSTS" . -}}
-{{- $svcPort := .Values.sts.service.port -}}
+{{- $svcPort := .Values.sts.service.frontendPort -}}
 {{- if and .Values.sts.ingress.className (not (semverCompare ">=1.18-0" .Capabilities.KubeVersion.GitVersion)) }}
   {{- if not (hasKey .Values.sts.ingress.annotations "kubernetes.io/ingress.class") }}
   {{- $_ := set .Values.sts.ingress.annotations "kubernetes.io/ingress.class" .Values.sts.ingress.className}}

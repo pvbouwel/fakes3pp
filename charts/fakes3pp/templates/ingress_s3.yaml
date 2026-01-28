@@ -1,6 +1,6 @@
 {{- if .Values.s3.ingress.enabled -}}
 {{- $fullName := include "fakes3pp.fullnameS3" . -}}
-{{- $svcPort := .Values.s3.service.port -}}
+{{- $svcPort := .Values.s3.service.frontendPort -}}
 {{- if and .Values.s3.ingress.className (not (semverCompare ">=1.18-0" .Capabilities.KubeVersion.GitVersion)) }}
   {{- if not (hasKey .Values.s3.ingress.annotations "kubernetes.io/ingress.class") }}
   {{- $_ := set .Values.s3.ingress.annotations "kubernetes.io/ingress.class" .Values.s3.ingress.className}}
