@@ -250,6 +250,10 @@ s3:
     tlsCertFile: tls.crt
     tlsKeyFile: tls.key
 
+    # A comma separated list of extra Fully Qualified Domain Names that can be used to reacht the S3 proxy
+    # extra refers to the fact that the ingress hosts and the service fqdn are automatically included
+    extraFQDNs: ""
+
     # Where to put the file with backend configuration
     backends:
       dir: /etc/regions    # pragma: allowlist secret
