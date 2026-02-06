@@ -170,6 +170,43 @@ var testDenyAllUnlessSpecificIssuer = `
 }
 `
 
+// https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_condition_operators.html
+// If the key that you specify in a policy condition is not present in the request context, the values do not match
+// and the condition is false. If the policy condition requires that the key is not matched, such as StringNotLike
+// or ArnNotLike, and the right key is not present, the condition is true. This logic applies to all condition
+// operators except ...IfExists and Null check. These operators test whether the key is present (exists) in the request context.
+// So for testDenyUnlessUserIdTagSpecified is aws:PrincipalTag/user_id is not present the condition is true and explicit deny => "A wildcard matches any value as long as the value is provided: scenario no value provided"
+//
+//	but if aws:PrincipalTag/user_id is present the condition is always false because we match with wildcard we should get allow => "A wildcard matches any value as long as the value is provided: scenario a value provided"
+var testDenyUnlessUserIdTagSpecified = `
+{
+	"Version": "2012-10-17",
+	"Statement": [
+        {
+			"Sid": "Allow all if test department",
+			"Effect": "Allow",
+			"Action": [
+				"*"
+			],
+			"Resource": "*"
+        },
+		{
+			"Sid": "Deny all",
+			"Effect": "Deny",
+			"Action": [
+				"*"
+			],
+			"Resource": "*",
+			"Condition" : {
+                "StringNotLike" : {
+                    "aws:PrincipalTag/user_id": ["*"]
+                }
+            }
+        }
+	]
+}
+`
+
 var testSessionDataTestDepartment = &PolicySessionData{
 	Claims: PolicySessionClaims{},
 	Tags: session.AWSSessionTags{
@@ -376,6 +413,41 @@ func TestPolicyEvaluations(t *testing.T) {
 			),
 			false,
 			reasonExplicitDeny,
+		},
+		{
+			"A wildcard matches any value as long as the value is provided: scenario no value provided",
+			testDenyUnlessUserIdTagSpecified,
+			NewIamAction(
+				actionnames.IAMActionS3GetObject,
+				testBucketARN,
+				&PolicySessionData{
+					Claims: PolicySessionClaims{
+						Subject: "master",
+						Issuer:  "other-issuer",
+					},
+				},
+			),
+			false,
+			reasonExplicitDeny,
+		},
+		{
+			"A wildcard matches any value as long as the value is provided: scenario a value provided",
+			testDenyUnlessUserIdTagSpecified,
+			NewIamAction(
+				actionnames.IAMActionS3GetObject,
+				testBucketARN,
+				&PolicySessionData{
+					Claims: PolicySessionClaims{
+						Subject: "master",
+						Issuer:  "other-issuer",
+					},
+					Tags: session.AWSSessionTags{
+						PrincipalTags: map[string][]string{"user_id": {"user-1"}},
+					},
+				},
+			),
+			true,
+			reasonActionIsAllowed,
 		},
 	}
 
