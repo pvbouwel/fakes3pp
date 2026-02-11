@@ -19,8 +19,11 @@ import (
 // These are different from aws.Credentials because these are actually credentials that only
 // live in the realm of our Proxy (STS+S3 environment) and they are not actual AWS credentials
 type AWSCredentials struct {
-	AccessKey    string    `xml:"AccessKeyId" json:"accessKey,omitempty" yaml:"accessKey"`
-	SecretKey    string    `xml:"SecretAccessKey" json:"secretKey,omitempty" yaml:"secretKey"`
+	// #nosec 117 -- By design to read and write credenitals
+	AccessKey string `xml:"AccessKeyId" json:"accessKey,omitempty" yaml:"accessKey"`
+	// #nosec 117 -- By design to read and write credenitals
+	SecretKey string `xml:"SecretAccessKey" json:"secretKey,omitempty" yaml:"secretKey"`
+	// #nosec 117 -- By design to read and write credenitals
 	SessionToken string    `xml:"SessionToken" json:"sessionToken,omitempty" yaml:"sessionToken"`
 	Expiration   time.Time `xml:"Expiration" json:"expiration,omitempty" yaml:"-"`
 }

@@ -22,8 +22,11 @@ type backendConfigFileEntry struct {
 }
 
 type awsBackendCredentialFile struct {
-	AccessKey    string `yaml:"aws_access_key_id" json:"aws_access_key_id"`
-	SecretKey    string `yaml:"aws_secret_access_key" json:"aws_secret_access_key"`
+	// #nosec 117 -- By design to read and write credenitals
+	AccessKey string `yaml:"aws_access_key_id" json:"aws_access_key_id"`
+	// #nosec 117 -- By design to read and write credenitals
+	SecretKey string `yaml:"aws_secret_access_key" json:"aws_secret_access_key"`
+	// #nosec 117 -- By design to read and write credenitals
 	SessionToken string `yaml:"aws_session_token,omitempty" json:"aws_session_token,omitempty"`
 }
 

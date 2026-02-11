@@ -13,6 +13,7 @@ import (
 	"github.com/VITObelgium/fakes3pp/aws/service"
 	"github.com/VITObelgium/fakes3pp/aws/service/s3/interfaces"
 	"github.com/VITObelgium/fakes3pp/constants"
+	"github.com/VITObelgium/fakes3pp/logging"
 	"github.com/VITObelgium/fakes3pp/presign"
 	"github.com/VITObelgium/fakes3pp/requestctx"
 	"github.com/VITObelgium/fakes3pp/requestctx/authtypes"
@@ -245,7 +246,8 @@ func makeSureSessionTokenIsForAccessKey(sessionToken, accessKeyId string, keyFun
 		return nil
 	}
 	if strings.ToUpper(os.Getenv("DEPRECATED_ALLOW_LEGACY_CREDENTIALS")) == "YES" {
-		slog.Warn("RELYING ON DEPRECATED BEHAVIOR", "claims", claims.AccessKeyID, "creds", accessKeyId)
+		// #nosec G706 -- sanitized with SafeString
+		slog.Warn("RELYING ON DEPRECATED BEHAVIOR", "claims", logging.SafeString(claims.AccessKeyID), "creds", logging.SafeString(accessKeyId))
 		return nil
 	}
 	return fmt.Errorf("mismatch between session token and access key i:d %s <> %s", claims.AccessKeyID, accessKeyId)

@@ -35,6 +35,7 @@ type pathBasedHC struct {
 
 // write a reply and if there are issues emit warning
 func writeReply(w http.ResponseWriter, body []byte, replyPurpose string) {
+	// #nosec G705 -- body is static and not derived from user input
 	_, err := w.Write(body)
 	if err != nil {
 		slog.Warn("Could not write HTTP response body", "error", err, "replyPurpose", replyPurpose)
@@ -66,7 +67,7 @@ func (hc *pathBasedHC) DoHealthcheckIfNeeded(w http.ResponseWriter, r *http.Requ
 	}
 	if isHealthy {
 		w.WriteHeader(http.StatusOK)
-		writeReply(w, okBody, "report passsing healthcheck")
+		writeReply(w, okBody, "report passing healthcheck")
 	} else {
 		failHealthcheck(w)
 	}

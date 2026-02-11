@@ -58,6 +58,7 @@ func (hb handlerBuilder) Build(backendManager interfaces.BackendManager, corsHan
 
 func defaultRequester(r *http.Request) (*http.Response, error) {
 	client := &http.Client{}
+	// #nosec G704 -- URL constructed by retargetting so trusted host and protocol
 	return client.Do(r)
 }
 
