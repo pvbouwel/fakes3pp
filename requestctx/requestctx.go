@@ -74,7 +74,7 @@ type RequestCtx struct {
 	//The API operation
 	Operation fmt.Stringer
 
-	//Session token
+	// #nosec 117 -- By design to read and write credenitals
 	SessionToken string
 
 	//Target region
@@ -122,12 +122,7 @@ func GetAccessLogStringInfo(r *http.Request, groupName, entryName string) string
 	if rCtx := get(r); rCtx != nil {
 		return rCtx.GetAccessLogStringInfo(groupName, entryName)
 	}
-	slog.Warn(
-		"Attempting to GetAccessLogStringInfo without existing request context",
-		"request", r,
-		"groupName", groupName,
-		"entryName", entryName,
-	)
+	logSettingWithoutExistingRequestContext(r, "GetAccessLogStringInfo", "groupName", groupName, "entryName", entryName)
 	return ""
 }
 
@@ -141,12 +136,9 @@ func SetAuthType(r *http.Request, authType authtypes.AuthType) {
 		}
 		rCtx.AuthType = authType
 		return
+
 	}
-	slog.Error(
-		"Attempting to set AuthType without existing request context",
-		"request", r,
-		"AuthType", authType,
-	)
+	logSettingWithoutExistingRequestContext(r, "SetAuthType", "AuthType", authType)
 }
 func GetAuthType(r *http.Request) (authtypes.AuthType, error) {
 	if rCtx := get(r); rCtx != nil {
@@ -166,11 +158,7 @@ func SetSignedHeaders(r *http.Request, signedHeaders []string) {
 		rCtx.SignedHeaders = signedHeaders
 		return
 	}
-	slog.Error(
-		"Attempting to set Signed Headers without existing request context",
-		"request", r,
-		"SignedHeaders", signedHeaders,
-	)
+	logSettingWithoutExistingRequestContext(r, "SetSignedHeaders", "SignedHeaders", signedHeaders)
 }
 
 func GetSignedHeaders(r *http.Request) ([]string, error) {
@@ -178,6 +166,13 @@ func GetSignedHeaders(r *http.Request) ([]string, error) {
 		return rCtx.SignedHeaders, nil
 	}
 	return nil, errors.New("no signedHeaders stored in requestctx")
+}
+
+func logSettingWithoutExistingRequestContext(r *http.Request, funcName string, logArgs ...any) {
+	args := []any{"function", funcName, "request", r}
+	args = append(args, logArgs...)
+	// #nosec G706 -- Should not ever occure unless local testing
+	slog.Error("Attempting to set context-info without existing request context", args...)
 }
 
 func SetTargetRegion(r *http.Request, region string) {
@@ -191,11 +186,7 @@ func SetTargetRegion(r *http.Request, region string) {
 		rCtx.TargetRegion = region
 		return
 	}
-	slog.Error(
-		"Attempting to set Region without existing request context",
-		"request", r,
-		"TargetRegion", region,
-	)
+	logSettingWithoutExistingRequestContext(r, "SetTargetRegion", "Attempting to set context-info without existing request context", "TargetRegion", region)
 }
 
 func GetTargetRegion(r *http.Request) (string, error) {
@@ -216,11 +207,7 @@ func SetSessionToken(r *http.Request, token string) {
 		rCtx.SessionToken = token
 		return
 	}
-	slog.Error(
-		"Attempting to set SessionToken without existing request context",
-		"request", r,
-		"session token", token,
-	)
+	logSettingWithoutExistingRequestContext(r, "SetSessionToken", "session token", token)
 }
 
 func SetErrorCode(ctx context.Context, errorCode fmt.Stringer) {
@@ -251,11 +238,7 @@ func SetOperation(r *http.Request, operation fmt.Stringer) {
 		rCtx.Operation = operation
 		return
 	}
-	slog.Error(
-		"Attempting to set operation without existing request context",
-		"request", r,
-		"operation", operation.String(),
-	)
+	logSettingWithoutExistingRequestContext(r, "SetOperation", "operation", operation.String())
 }
 
 func GetOperation(r *http.Request) fmt.Stringer {
@@ -281,12 +264,8 @@ func AddAccessLogInfo(r *http.Request, groupName string, attrs ...slog.Attr) {
 		rCtx.AddAccessLogInfo(groupName, attrs...)
 		return
 	}
-	slog.Error(
-		"Attempting to add access log info without request context",
-		"group_name", groupName,
-		"attributes", attrs,
-		"request", r,
-	)
+	logSettingWithoutExistingRequestContext(r, "AddAccessLogInfo", "group_name", groupName,
+		"attributes", attrs)
 }
 
 func (c *RequestCtx) GetAccessLogInfo() LogAttrs {
@@ -416,9 +395,5 @@ func SetUpstreamHTTPStatus(r *http.Request, code int) {
 		rCtx.UpstreamHTTPStatus = code
 		return
 	}
-	slog.Error(
-		"Attempting to set Upstream HTTP Status code without existing request context",
-		"request", r,
-		"Upstream HTTP Status", code,
-	)
+	logSettingWithoutExistingRequestContext(r, "SetUpstreamHTTPStatus", "Upstream HTTP Status", code)
 }

@@ -43,6 +43,7 @@ const (
 	proxyJwtPublicRSAKey                             = "proxyJwtPublicRSAKey"
 	proxyJwtPrivateRSAKey                            = "proxyJwtPrivateRSAKey"
 	s3ProxyRemovableQueryParams                      = "s3ProxyRemovableQueryParams"
+	s3HeadersInAccesslog                             = "s3HeadersInAccesslog"
 	stsProxyFQDN                                     = "stsProxyFQDN"
 	stsProxyTlsPort                                  = "stsProxyPort"
 	stsProxyHTTPPort                                 = "stsProxyHTTPPort"
@@ -71,6 +72,7 @@ const (
 	FAKES3PP_S3_PROXY_REMOVABLE_QUERY_PARAMS = "FAKES3PP_S3_PROXY_REMOVABLE_QUERY_PARAMS"
 	FAKES3PP_S3_CORS_STRATEGY                = "FAKES3PP_S3_CORS_STRATEGY"
 	FAKES3PP_S3_CORS_STATIC_ALLOWED_ORIGIN   = "FAKES3PP_S3_CORS_STATIC_ALLOWED_ORIGIN"
+	FAKES3PP_S3_HEADERS_IN_ACCESSLOG         = "FAKES3PP_S3_HEADERS_IN_ACCESSLOG"
 
 	FAKES3PP_STS_PROXY_FQDN          = "FAKES3PP_STS_PROXY_FQDN"
 	FAKES3PP_STS_PROXY_TLS_PORT      = "FAKES3PP_STS_PROXY_TLS_PORT"
@@ -161,6 +163,13 @@ var envVarDefs = []envVarDef{
 
 		Regexes allow flexibility but you should be careful with meta-characters. An easy way to test is to use a small golang app like https://gist.github.com/pvbouwel/02b42b899bbc1478b29fc75a24902cb5 if you do not have golang setup locally you can use the go playground https://go.dev/play/p/bq4oU4GU05a
 		`,
+		[]string{proxys3},
+	},
+	{
+		s3HeadersInAccesslog,
+		FAKES3PP_S3_HEADERS_IN_ACCESSLOG,
+		false,
+		"If defined then it takes a comma separated list of Canonical header names (casing sensitive matching). Those headers will be added to the access log if present in the response from upstream.",
 		[]string{proxys3},
 	},
 	{
@@ -292,6 +301,15 @@ func getMaxStsDuration() time.Duration {
 
 // The Fully Qualified Domain names for the S3 proxy
 var s3ProxyFQDNs []string
+
+func getS3HeadersInAccesslog() ([]string, error) {
+	var headers []string
+	err := viper.UnmarshalKey(s3HeadersInAccesslog, &headers)
+	if err != nil {
+		return nil, err
+	}
+	return headers, nil
+}
 
 func getStsProxyFQDNs() ([]string, error) {
 	var fqdns []string

@@ -225,6 +225,7 @@ func awaitServerOnPort(port int, tlsEnabled bool) error {
 	i := 0
 	for i < attempts {
 		i += 1
+		// #nosec G704 -- URL constructed from our own trusted config
 		resp, err := client.Do(req)
 		if err == nil && resp.StatusCode == 200 {
 			return nil

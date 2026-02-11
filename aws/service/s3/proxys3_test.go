@@ -36,7 +36,7 @@ func TestMain(m *testing.M) {
 
 var testRequests = []*http.Request{}
 
-var testProxyStub = func(ctx context.Context, w http.ResponseWriter, r *http.Request, backendId string, bm interfaces.BackendManager, f requesterFunc, ch interfaces.CORSHandler) {
+var testProxyStub = func(ctx context.Context, w http.ResponseWriter, r *http.Request, backendId string, bm interfaces.BackendManager, f requesterFunc, ch interfaces.CORSHandler, hp interfaces.HeaderProcessor) {
 	testRequests = append(testRequests, r)
 	w.WriteHeader(http.StatusOK)
 }
@@ -116,6 +116,7 @@ func NewTestS3Server(t testing.TB, proxyHB interfaces.HandlerBuilderI, pm *iam.P
 		removableQueryParamRegexes,
 		corsHandler,
 		0,
+		nil,
 	)
 	if err != nil {
 		t.Error("Problem creating test STS server", "error", err)

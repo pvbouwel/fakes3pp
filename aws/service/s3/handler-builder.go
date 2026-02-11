@@ -23,7 +23,7 @@ type requesterFunc func(*http.Request) (*http.Response, error)
 // A handler builder builds http handlers
 type handlerBuilder struct {
 	//How proxying is done to the backend
-	proxyFunc func(context.Context, http.ResponseWriter, *http.Request, string, interfaces.BackendManager, requesterFunc, interfaces.CORSHandler)
+	proxyFunc func(context.Context, http.ResponseWriter, *http.Request, string, interfaces.BackendManager, requesterFunc, interfaces.CORSHandler, interfaces.HeaderProcessor)
 
 	//Function that performs the actual upstream request.
 	requester requesterFunc
@@ -40,7 +40,7 @@ func getS3Action(r *http.Request) api.S3Operation {
 	return action
 }
 
-func (hb handlerBuilder) Build(backendManager interfaces.BackendManager, corsHandler interfaces.CORSHandler) http.HandlerFunc {
+func (hb handlerBuilder) Build(backendManager interfaces.BackendManager, corsHandler interfaces.CORSHandler, headerProcessor interfaces.HeaderProcessor) http.HandlerFunc {
 	if backendManager == nil {
 		panic("This is a programming mistake and server should not even start.")
 	}
@@ -52,17 +52,18 @@ func (hb handlerBuilder) Build(backendManager interfaces.BackendManager, corsHan
 			writeS3ErrorResponse(ctx, w, ErrS3InternalError, errors.New("could not get target region from requestctx"))
 			return
 		}
-		hb.proxyFunc(ctx, w, r, targetRegion, backendManager, hb.requester, corsHandler)
+		hb.proxyFunc(ctx, w, r, targetRegion, backendManager, hb.requester, corsHandler, headerProcessor)
 	}
 }
 
 func defaultRequester(r *http.Request) (*http.Response, error) {
 	client := &http.Client{}
+	// #nosec G704 -- URL constructed by retargetting so trusted host and protocol
 	return client.Do(r)
 }
 
 func justProxy(ctx context.Context, w http.ResponseWriter, r *http.Request, targetBackendId string, backendManager interfaces.BackendManager,
-	requester requesterFunc, corsHandler interfaces.CORSHandler) {
+	requester requesterFunc, corsHandler interfaces.CORSHandler, headerProcessor interfaces.HeaderProcessor) {
 	err := reTargetRequest(ctx, r, targetBackendId, backendManager)
 	if err == errInvalidBackendErr {
 		slog.WarnContext(ctx, "Invalid region was specified in the request", "error", err, "backendId", targetBackendId)
@@ -142,6 +143,9 @@ func justProxy(ctx context.Context, w http.ResponseWriter, r *http.Request, targ
 
 	slog.DebugContext(ctx, "Response status", "status", resp.StatusCode)
 	for hk, hvs := range resp.Header {
+		if headerProcessor != nil {
+			headerProcessor.ProcessHeader(r, hk, hvs)
+		}
 		for _, hv := range hvs {
 			w.Header().Add(hk, hv)
 		}
