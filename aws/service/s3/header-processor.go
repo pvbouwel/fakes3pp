@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/VITObelgium/fakes3pp/aws/service/s3/interfaces"
+	"github.com/VITObelgium/fakes3pp/logging"
 	"github.com/VITObelgium/fakes3pp/requestctx"
 )
 
@@ -29,7 +30,11 @@ func (h *headerToAccessLog) ProcessHeader(r *http.Request, headerName string, he
 		if len(headerValues) < 1 {
 			slog.DebugContext(r.Context(), "Encountered header with no values", "header", headerName, "values", headerValues)
 		} else {
-			requestctx.AddAccessLogInfo(r, "headers", slog.String(headerName, headerValues[0]))
+			lattr := slog.Attr{
+				Key:   headerName,
+				Value: logging.SafeString(headerValues[0]),
+			}
+			requestctx.AddAccessLogInfo(r, "headers", lattr)
 		}
 	}
 }

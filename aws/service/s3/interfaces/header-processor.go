@@ -3,6 +3,6 @@ package interfaces
 import "net/http"
 
 type HeaderProcessor interface {
-	//Process the headers that are returned to a certain request
+	//ProcessHeader is called once per response header returned by a proxy backend; implementations may log to access log
 	ProcessHeader(req *http.Request, headerName string, headerValues []string)
 }

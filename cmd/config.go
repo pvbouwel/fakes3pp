@@ -169,7 +169,7 @@ var envVarDefs = []envVarDef{
 		s3HeadersInAccesslog,
 		FAKES3PP_S3_HEADERS_IN_ACCESSLOG,
 		false,
-		"If defined then it takes a comma separated list of header names. Those headers will be added to the access log if present in the response from upstream.",
+		"If defined then it takes a comma separated list of Canonical header names (casing sensitive matching). Those headers will be added to the access log if present in the response from upstream.",
 		[]string{proxys3},
 	},
 	{
