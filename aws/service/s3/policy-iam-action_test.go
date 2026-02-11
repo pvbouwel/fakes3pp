@@ -37,7 +37,7 @@ func (*noVirtualHostRequestsType) IsVirtualHostingRequest(req *http.Request) boo
 
 var noVirtualHostRequests = &noVirtualHostRequestsType{}
 
-func (p *StubJustReturnIamAction) Build(backendManager interfaces.BackendManager, corsHandler interfaces.CORSHandler) http.HandlerFunc {
+func (p *StubJustReturnIamAction) Build(backendManager interfaces.BackendManager, corsHandler interfaces.CORSHandler, headerProcessor interfaces.HeaderProcessor) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		action := getS3Action(r)
 		actions, err := newIamActionsFromS3Request(action, r, nil, noVirtualHostRequests)

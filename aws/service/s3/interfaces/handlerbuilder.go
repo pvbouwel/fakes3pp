@@ -6,5 +6,5 @@ import (
 
 type HandlerBuilderI interface {
 	//Takes S3ApiAction and whether it is a presigned request
-	Build(BackendManager, CORSHandler) http.HandlerFunc
+	Build(BackendManager, CORSHandler, HeaderProcessor) http.HandlerFunc
 }

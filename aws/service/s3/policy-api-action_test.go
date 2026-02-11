@@ -17,7 +17,7 @@ type StubJustReturnApiAction struct {
 
 var globalLastApiActionStubJustReturnApiAction api.S3Operation = api.UnknownOperation
 
-func (p *StubJustReturnApiAction) Build(backendManager interfaces.BackendManager, corsHandler interfaces.CORSHandler) http.HandlerFunc {
+func (p *StubJustReturnApiAction) Build(backendManager interfaces.BackendManager, corsHandler interfaces.CORSHandler, headerProcessor interfaces.HeaderProcessor) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//AWS CLI expects certain structure for ok responses
 		//For error we could use the message field to pass a message regardless

@@ -56,6 +56,8 @@ func NewS3Server(
 	removableQueryParamRegexes []*regexp.Regexp,
 	corsHandler interfaces.CORSHandler,
 	extraHTTPPort int,
+	//The headers that should be logged if in a response from upstream
+	headersInAccessLog []string,
 ) (s server.Serverable, err error) {
 	s3BackendCfg, err := getBackendsConfig(s3BackendConfigFilePath, backendLegacyBehaviorDefaultRegion)
 	if err != nil {
@@ -78,6 +80,7 @@ func NewS3Server(
 		removableQueryParamRegexes,
 		corsHandler,
 		extraHTTPPort,
+		headersInAccessLog,
 	)
 }
 func newS3Server(
@@ -94,6 +97,7 @@ func newS3Server(
 	removableQueryParamRegexes []*regexp.Regexp,
 	corsHandler interfaces.CORSHandler,
 	extraHTTPPort int,
+	headersInAccessLog []string,
 ) (s *S3Server, err error) {
 	key, err := utils.NewKeyStorage(jwtPrivateRSAKeyFilePath)
 	if err != nil {
@@ -132,7 +136,7 @@ func newS3Server(
 		}
 	}
 	s.mws = mws
-	s.SetHandlerFunc(s.BuildHandlerfunc())
+	s.SetHandlerFunc(s.BuildHandlerfunc(headersInAccessLog))
 	return s, nil
 }
 
@@ -160,7 +164,8 @@ func (s *S3Server) IsVirtualHostingRequest(req *http.Request) bool {
 // Register routes to S3 router
 // For real cases the proxyHB HandlerBuilder should build a handler function
 // that sends the request upstream and passes back the response.
-func (s *S3Server) BuildHandlerfunc() http.HandlerFunc {
-	h := s.proxyHB.Build(s.s3BackendManager, s.corsHandler)
+func (s *S3Server) BuildHandlerfunc(headersToLog []string) http.HandlerFunc {
+	hp := NewHeaderProcessor(headersToLog)
+	h := s.proxyHB.Build(s.s3BackendManager, s.corsHandler, hp)
 	return middleware.Chain(h, s.mws...)
 }

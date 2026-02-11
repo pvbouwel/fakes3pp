@@ -30,6 +30,12 @@ func buildS3Server() server.Serverable {
 		panic(fmt.Sprintf("Could not get sts proxy fqdns: %s", err))
 	}
 
+	headersInAccessLog, err := getS3HeadersInAccesslog()
+	if err != nil {
+		slog.Error("Could not get s3 Headers for access log", "error", err)
+		panic(fmt.Sprintf("Could not get s3 Headers for access log: %s", err))
+	}
+
 	removableQueryParams, err := getS3RemovableQueryParamRegexes()
 	if err != nil {
 		slog.Error("Could not get removable query param regexes", "error", err)
@@ -50,6 +56,7 @@ func buildS3Server() server.Serverable {
 		removableQueryParams,
 		getS3CORSHandler(),
 		getS3ProxyHTTPPort(),
+		headersInAccessLog,
 	)
 	if err != nil {
 		slog.Error("Could not create S3 server", "error", err)
